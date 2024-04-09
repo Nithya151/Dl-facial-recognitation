@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f7f7f7;
+            text-align: center;
+        }
+        h1 {
+            margin-top: 0;
+            color: #555;
+        }
+        #upload-form {
+            margin-top: 20px;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            font-weight: bold;
+            border-radius: 5px;
+            display: inline-block;
+            background-color: #eee;
+        }
+        #result.emotion-happy { color: #4CAF50; }
+        #result.emotion-sad { color: #2196F3; }
+        #result.emotion-angry { color: #f44336; }
+        #result.emotion-neutral { color: #9E9E9E; }
+        #result.emotion-surprise { color: #FFC107; }
+        .custom-file-upload {
+            display: inline-block;
+            padding: 12px 24px;
+            cursor: pointer;
+            background-color: #008CBA;
+            color: white;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .custom-file-upload:hover {
+            background-color: #007B9E;
+        }
+        #uploaded-image {
+            margin-top: 20px;
+            max-width: 400px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+            padding: 5px;
+        }
+        #reset-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        #reset-button:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <h1>Emotion Detection</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <label for="image" class="custom-file-upload" tabindex="0" aria-label="Choose file for emotion detection">
+            Choose File
+        </label>
+        <input type="file" id="image" name="image" accept="image/*" aria-required="true">
+        <button id="upload-button" type="submit" style="display:none;">Upload Image</button>
+    </form>
+
+    <div id="result"></div>
+    <img id="uploaded-image" src="#" alt="Uploaded image preview" style="display:none;">
+    <button id="reset-button" style="display:none;">Reset</button>
+
+    <script>
+        document.getElementById('image').addEventListener('change', function(event) {
+            const fileInput = event.target;
+            const file = fileInput.files[0];
+            const uploadedImage = document.getElementById('uploaded-image');
+            const uploadButton = document.getElementById('upload-button');
+            const resetButton = document.getElementById('reset-button');
+
+            if (file) {
+                uploadedImage.src = URL.createObjectURL(file);
+                uploadedImage.style.display = 'block';
+                uploadButton.style.display = 'inline-block';
+                resetButton.style.display = 'inline-block';
+            }
+        });
+
+        document.getElementById('upload-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            fetch('/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const resultDiv = document.getElementById('result');
+                resultDiv.innerText = 'Detected Emotion: ' + data.emotion;
+                resultDiv.className = 'emotion-' + data.emotion.toLowerCase();
+                resultDiv
